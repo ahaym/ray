@@ -50,5 +50,8 @@ b = z . unC
 color3 :: Double -> Double -> Double -> Color3
 color3 a b c = C_ (V3 a b c)
 
+mkRow :: Color3 -> String
+mkRow (C_ (V3 r g b)) = unwords $ show . floor . (*255.99) <$> [r, g, b]
+
 origin :: V3
 origin = V3 0 0 0
