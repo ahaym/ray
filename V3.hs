@@ -47,5 +47,8 @@ g = y . unC
 b :: Color3 -> Double
 b = z . unC
 
-c :: Double -> Double -> Double -> Color3
-c a b c = C_ (V3 a b c)
+color3 :: Double -> Double -> Double -> Color3
+color3 a b c = C_ (V3 a b c)
+
+origin :: V3
+origin = V3 0 0 0
