@@ -1,3 +1,5 @@
+module Chapter3 where
+
 import Control.Monad
 import System.IO
 
