@@ -22,6 +22,6 @@ main = withFile "chapter4.ppm" WriteMode $ \h -> do
             horizontal = V3 4 0 0
             vertical = V3 0 2 0
             sphere = Sphere (V3 0 0 (-1)) 0.5
-            col = color hsCh4 sphere $ Ray origin
+            col = colorCh4 sphere $ Ray origin
                 (lowerLeft + u*horizontal + v*vertical)
         hPutStrLn h $ mkRow col
