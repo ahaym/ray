@@ -9,7 +9,7 @@ class Vec3 v where
     cross :: v -> v -> v
     squaredMag :: v -> Double
     mag :: v -> Double
-    mag = (^2) . squaredMag
+    mag = sqrt . squaredMag
 
 data V3 = V3
     { x :: Double

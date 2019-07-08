@@ -1,4 +1,4 @@
-module Main where
+module Chapter5 where
 
 import Control.Monad
 import System.IO
@@ -16,8 +16,8 @@ color h r = case hitAbstract (0, 9999999) h r of
 main :: IO ()
 main = withFile "chapter5.ppm" WriteMode $ \h -> do
     hPutStrLn h "P3"
-    let nx = 800
-        ny = 400
+    let nx = 400
+        ny = 200
     hPrint h (floor nx)
     hPrint h (floor ny)
     hPrint h 255
