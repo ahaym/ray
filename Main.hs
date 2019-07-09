@@ -13,7 +13,7 @@ import Sphere
 import V3
 
 main :: IO ()
-main = withFile "chapter8.ppm" WriteMode $ \h -> do
+main = withFile "chapter92.ppm" WriteMode $ \h -> do
     hPutStrLn h "P3"
     let nx = 200
         ny = 100
@@ -21,12 +21,13 @@ main = withFile "chapter8.ppm" WriteMode $ \h -> do
         lowerLeft = V3 (-2) (-1) (-1)
         horizontal = V3 4 0 0
         vertical = V3 0 2 0
-        cam = Camera lowerLeft horizontal vertical (V3 0 0 0)
+        cam = Camera lowerLeft horizontal vertical origin
         world = HList
             [ sphere (V3 0 0 (-1)) 0.5 (Matte $ color3 0.8 0.3 0.3)
             , sphere (V3 0 (-100.5) (-1)) 100 (Matte $ color3 0.8 0.8 0)
-            , sphere (V3 1 0 (-1)) 0.5 (Metal 1 $ color3 0.8 0.6 0.2)
-            , sphere (V3 (-1) 0 (-1)) 0.5 (Metal 0.3 $ color3 0.8 0.8 0.8)
+            , sphere (V3 1 0 (-1)) 0.5 (Metal 0.2 $ color3 0.8 0.6 0.2)
+            , sphere (V3 (-1) 0 (-1)) 0.5 (Glass 1.5)
+            , sphere (V3 (-1) 0 (-1)) (-0.45) (Glass 1.5)
             ]
     hPrint h (floor nx)
     hPrint h (floor ny)

@@ -16,13 +16,3 @@ randomUS :: IO V3
 randomUS = do
     v <- let action = randomRIO (-1, 1) in V3 <$> action <*> action <*> action
     if squaredMag v < 1 then return v else randomUS
-
-
-reflect :: V3 -> V3 -> V3
-reflect v n = v - 2*(conv $ dot v n)*n
-
-data HitData = HitData
-    { t :: Double
-    , hitPoint :: V3
-    , normal :: V3
-    } deriving Show

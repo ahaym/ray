@@ -53,5 +53,8 @@ color3 a b c = C_ (V3 a b c)
 mkRow :: Color3 -> String
 mkRow (C_ (V3 r g b)) = unwords $ show . floor . (*255.99) <$> [r, g, b]
 
-origin :: V3
-origin = V3 0 0 0
+data HitData = HitData
+    { t :: Double
+    , hitPoint :: V3
+    , normal :: V3
+    } deriving Show

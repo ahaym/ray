@@ -10,5 +10,8 @@ data Camera = Camera
     , origin_ :: V3
     }
 
+origin :: V3
+origin = V3 0 0 0
+
 getRay :: Camera -> Double -> Double -> Ray
 getRay (Camera ll horiz vert z) u v = Ray z $ ll + (conv u*horiz) + (conv v*vert) - z
