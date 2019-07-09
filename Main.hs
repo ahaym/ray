@@ -7,7 +7,6 @@ import System.IO
 import System.Random
 
 import Camera
-import qualified Chapter3 as Ch3
 import Material
 import Ray
 import Sphere
@@ -23,11 +22,11 @@ main = withFile "chapter8.ppm" WriteMode $ \h -> do
         horizontal = V3 4 0 0
         vertical = V3 0 2 0
         cam = Camera lowerLeft horizontal vertical (V3 0 0 0)
-        world = ML 
-            [ msph (V3 0 0 (-1)) 0.5 (Matte $ color3 0.8 0.3 0.3)
-            , msph (V3 0 (-100.5) (-1)) 100 (Matte $ color3 0.8 0.8 0)
-            , msph (V3 1 0 (-1)) 0.5 (Metal 0.3 $ color3 0.8 0.6 0.2)
-            , msph (V3 (-1) 0 (-1)) 0.5 (Metal 1 $ color3 0.8 0.8 0.8)
+        world = HList
+            [ sphere (V3 0 0 (-1)) 0.5 (Matte $ color3 0.8 0.3 0.3)
+            , sphere (V3 0 (-100.5) (-1)) 100 (Matte $ color3 0.8 0.8 0)
+            , sphere (V3 1 0 (-1)) 0.5 (Metal 1 $ color3 0.8 0.6 0.2)
+            , sphere (V3 (-1) 0 (-1)) 0.5 (Metal 0.3 $ color3 0.8 0.8 0.8)
             ]
     hPrint h (floor nx)
     hPrint h (floor ny)
@@ -42,11 +41,15 @@ main = withFile "chapter8.ppm" WriteMode $ \h -> do
         let col = sum cols / (conv $ fromIntegral ns)
         hPutStrLn h $ mkRow col
 
-color :: MatHitable -> Ray -> Int -> IO Color3
-color h r depth = case hitWithMat (0.001, 999999999) h r of
+color :: Hitable -> Ray -> Int -> IO Color3
+color h r depth = case hitscan (0.001, 999999999) h r of
     Just (hd,recMat)
         | depth < 50 -> scatter recMat r hd >>= \case
             Just (r', attenuation) -> (attenuation*) <$> color h r' (depth + 1) 
             _ -> return $ color3 0 0 0
         | otherwise -> return $ color3 0 0 0
-    Nothing -> return $ Ch3.color r
+    Nothing -> return $ (conv $ 1 - t)*(color3 1 1 1) + (conv t)*(color3 0.5 0.7 1)
+    where
+        unitDir = mkUnit $ slope r
+        t = 0.5*(y unitDir + 1)
+

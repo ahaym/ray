@@ -1,15 +1,7 @@
 module Material where
 
 import Ray
-import Sphere
 import V3
-
-data MatSphere = MSphere Sphere Material deriving Show
-
-data MatHitable
-    = MS MatSphere
-    | ML [MatHitable]
-    deriving Show
 
 data Material
     = Matte Color3
@@ -31,19 +23,3 @@ scatter (Metal fuzz albedo) (Ray inter slope) (HitData _ recP recNorm) = do
     return $ if dot slope' recNorm > 0
         then Just (scattered, albedo)
         else Nothing
-
-reflect :: V3 -> V3 -> V3
-reflect v n = v - 2*(conv $ dot v n)*n
-
-hitWithMat :: (Double, Double) -> MatHitable -> Ray -> Maybe (HitData, Material)
-hitWithMat interval (MS (MSphere sp mat)) r = case hsCh5 interval sp r of
-    Just r -> Just (r, mat)
-    Nothing -> Nothing
-hitWithMat (tmin, tmax) (ML hs) r = foldl go Nothing hs
-    where
-        go hd'm x = let tmax' = maybe tmax (t . fst) hd'm in case hitWithMat (tmin, tmax') x r of
-            Nothing -> hd'm
-            res -> res
-
-msph :: V3 -> Double -> Material -> MatHitable
-msph v r m = MS $ MSphere (Sphere v r) m

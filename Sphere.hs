@@ -1,17 +1,13 @@
 module Sphere where
 
+import Material
 import Ray
 import V3
 
 data Sphere = Sphere 
     { center :: V3
     , radius :: Double
-    } deriving Show
-
-data HitData = HitData
-    { t :: Double
-    , hitPoint :: V3
-    , normal :: V3
+    , sphereMat :: Material
     } deriving Show
 
 data Hitable
@@ -19,18 +15,11 @@ data Hitable
     | HList [Hitable]
     deriving Show
 
--- HitSphere for Chapter 4
-hsCh4 :: Sphere -> Ray -> Bool
-hsCh4 (Sphere cent rad) (Ray inter slop) = discriminant > 0
-    where
-        oc = inter - cent
-        a = dot slop slop
-        b = 2 * (dot oc slop)
-        c = dot oc oc - rad^2
-        discriminant = b^2 - 4*a*c
+sphere :: V3 -> Double -> Material -> Hitable
+sphere c r m = HSphere $ Sphere c r m
 
-hsCh5 :: (Double, Double) -> Sphere -> Ray -> Maybe HitData
-hsCh5 (tmin, tmax) (Sphere cent rad) r@(Ray inter slop)
+hitscan :: (Double, Double) -> Hitable -> Ray -> Maybe (HitData, Material)
+hitscan (tmin, tmax) (HSphere (Sphere cent rad mat)) r@(Ray inter slop)
     | discriminant <= 0 = Nothing
     | temp1 > tmin && temp1 < tmax = mkHitData temp1
     | temp2 > tmin && temp2 < tmax = mkHitData temp2 
@@ -46,12 +35,10 @@ hsCh5 (tmin, tmax) (Sphere cent rad) r@(Ray inter slop)
         temp2 = (-b + sqrt (b^2 - a*c)) / a
 
         mkHitData t = let p = pointAt t r in
-            Just $ HitData t p ((p - cent) / conv rad)
+            Just $ (HitData t p ((p - cent) / conv rad), mat)
 
-hitAbstract :: (Double, Double) -> Hitable -> Ray -> Maybe HitData
-hitAbstract interval (HSphere sp) r = hsCh5 interval sp r
-hitAbstract (tmin, tmax) (HList hs) r = foldl go Nothing hs
+hitscan (tmin, tmax) (HList hs) r = foldl go Nothing hs
     where
-        go hd'm x = let tmax' = maybe tmax t hd'm in case hitAbstract (tmin, tmax') x r of
+        go hd'm x = let tmax' = maybe tmax (t . fst) hd'm in case hitscan (tmin, tmax') x r of
             Nothing -> hd'm
             res -> res
