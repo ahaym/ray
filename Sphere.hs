@@ -1,6 +1,5 @@
 module Sphere where
 
-import qualified Chapter3 as Ch3
 import Ray
 import V3
 
@@ -20,6 +19,7 @@ data Hitable
     | HList [Hitable]
     deriving Show
 
+-- HitSphere for Chapter 4
 hsCh4 :: Sphere -> Ray -> Bool
 hsCh4 (Sphere cent rad) (Ray inter slop) = discriminant > 0
     where
@@ -55,8 +55,3 @@ hitAbstract (tmin, tmax) (HList hs) r = foldl go Nothing hs
         go hd'm x = let tmax' = maybe tmax t hd'm in case hitAbstract (tmin, tmax') x r of
             Nothing -> hd'm
             res -> res
-
-colorCh4 :: Sphere -> Ray -> Color3
-colorCh4 sphere ray
-    | hsCh4 sphere ray = color3 1 0 0
-    | otherwise = Ch3.color ray

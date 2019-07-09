@@ -1,4 +1,6 @@
-module Chapter7 where
+{-# LANGUAGE LambdaCase #-}
+
+module Main where
 
 import Control.Monad
 import System.IO
@@ -6,12 +8,13 @@ import System.Random
 
 import Camera
 import qualified Chapter3 as Ch3
+import Material
 import Ray
 import Sphere
 import V3
 
 main :: IO ()
-main = withFile "chapter7.ppm" WriteMode $ \h -> do
+main = withFile "chapter8.ppm" WriteMode $ \h -> do
     hPutStrLn h "P3"
     let nx = 200
         ny = 100
@@ -20,7 +23,12 @@ main = withFile "chapter7.ppm" WriteMode $ \h -> do
         horizontal = V3 4 0 0
         vertical = V3 0 2 0
         cam = Camera lowerLeft horizontal vertical (V3 0 0 0)
-        world = HList [HSphere $ Sphere (V3 0 0 (-1)) 0.5 ,HSphere $ Sphere (V3 0 (-100.5) (-1)) 100]
+        world = ML 
+            [ msph (V3 0 0 (-1)) 0.5 (Matte $ color3 0.8 0.3 0.3)
+            , msph (V3 0 (-100.5) (-1)) 100 (Matte $ color3 0.8 0.8 0)
+            , msph (V3 1 0 (-1)) 0.5 (Metal 0.3 $ color3 0.8 0.6 0.2)
+            , msph (V3 (-1) 0 (-1)) 0.5 (Metal 1 $ color3 0.8 0.8 0.8)
+            ]
     hPrint h (floor nx)
     hPrint h (floor ny)
     hPrint h 255
@@ -30,16 +38,15 @@ main = withFile "chapter7.ppm" WriteMode $ \h -> do
             let u = (x + rand1) / nx
                 v = (y + rand2) / ny
                 r = getRay cam u v
-            in color world r
+            in color world r 0
         let col = sum cols / (conv $ fromIntegral ns)
         hPutStrLn h $ mkRow col
 
-color :: Hitable -> Ray -> IO Color3
-color h r = case hitAbstract (0.001, 999999999) h r of
-    Just (HitData _ recP recNormal) -> do
-        rv <- randomUS
-        let target = recP + recNormal + rv
-        col <- color h $ Ray recP (target - recP)
-        return $ 0.5*col
+color :: MatHitable -> Ray -> Int -> IO Color3
+color h r depth = case hitWithMat (0.001, 999999999) h r of
+    Just (hd,recMat)
+        | depth < 50 -> scatter recMat r hd >>= \case
+            Just (r', attenuation) -> (attenuation*) <$> color h r' (depth + 1) 
+            _ -> return $ color3 0 0 0
+        | otherwise -> return $ color3 0 0 0
     Nothing -> return $ Ch3.color r
-

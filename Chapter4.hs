@@ -3,6 +3,7 @@ module Chapter4 where
 import Control.Monad
 import System.IO
 
+import qualified Chapter3 as Ch3
 import Ray
 import Sphere
 import V3
@@ -22,6 +23,11 @@ main = withFile "chapter4.ppm" WriteMode $ \h -> do
             horizontal = V3 4 0 0
             vertical = V3 0 2 0
             sphere = Sphere (V3 0 0 (-1)) 0.5
-            col = colorCh4 sphere $ Ray origin
+            col = color sphere $ Ray origin
                 (lowerLeft + u*horizontal + v*vertical)
         hPutStrLn h $ mkRow col
+
+color :: Sphere -> Ray -> Color3
+color sphere ray
+    | hsCh4 sphere ray = color3 1 0 0
+    | otherwise = Ch3.color ray
