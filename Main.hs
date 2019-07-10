@@ -13,15 +13,12 @@ import Sphere
 import V3
 
 main :: IO ()
-main = withFile "chapter92.ppm" WriteMode $ \h -> do
+main = withFile "chapter10.ppm" WriteMode $ \h -> do
     hPutStrLn h "P3"
     let nx = 200
         ny = 100
         ns = 100
-        lowerLeft = V3 (-2) (-1) (-1)
-        horizontal = V3 4 0 0
-        vertical = V3 0 2 0
-        cam = Camera lowerLeft horizontal vertical origin
+        cam = mkCamera (V3 (-2) 2 1) (V3 0 0 (-1)) (V3 0 1 0) 60 2
         world = HList
             [ sphere (V3 0 0 (-1)) 0.5 (Matte $ color3 0.8 0.3 0.3)
             , sphere (V3 0 (-100.5) (-1)) 100 (Matte $ color3 0.8 0.8 0)
@@ -53,4 +50,3 @@ color h r depth = case hitscan (0.001, 999999999) h r of
     where
         unitDir = mkUnit $ slope r
         t = 0.5*(y unitDir + 1)
-
