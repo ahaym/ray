@@ -13,12 +13,19 @@ import Sphere
 import V3
 
 main :: IO ()
-main = withFile "chapter10.ppm" WriteMode $ \h -> do
+main = withFile "chapter11.ppm" WriteMode $ \h -> do
     hPutStrLn h "P3"
     let nx = 200
         ny = 100
         ns = 100
-        cam = mkCamera (V3 (-2) 2 1) (V3 0 0 (-1)) (V3 0 1 0) 60 2
+        lookFrom = V3 3 3 2
+        lookAt = V3 0 0 (-1)
+        vup = (V3 0 1 0)
+        vfov = 20
+        aspect = 2
+        aperture = 2
+        focusDist = mag $ lookFrom - lookAt
+        cam = mkCamera lookFrom lookAt vup vfov aspect aperture focusDist
         world = HList
             [ sphere (V3 0 0 (-1)) 0.5 (Matte $ color3 0.8 0.3 0.3)
             , sphere (V3 0 (-100.5) (-1)) 100 (Matte $ color3 0.8 0.8 0)
@@ -31,11 +38,11 @@ main = withFile "chapter10.ppm" WriteMode $ \h -> do
     hPrint h 255
     forM_ [(x, y) | y <- [ny-1, ny-2..0], x <- [0..nx-1]] $ \(x, y) -> do
         rands <- replicateM ns $ let action = randomRIO (0, 0.9999999) in (,) <$> action <*> action
-        cols <- forM rands $ \(rand1, rand2) -> 
+        cols <- forM rands $ \(rand1, rand2) -> do
             let u = (x + rand1) / nx
                 v = (y + rand2) / ny
-                r = getRay cam u v
-            in color world r 0
+            r <- getRay cam u v
+            color world r 0
         let col = sum cols / (conv $ fromIntegral ns)
         hPutStrLn h $ mkRow col
 

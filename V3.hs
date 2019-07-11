@@ -2,6 +2,8 @@
 
 module V3 where
 
+import System.Random
+
 class Vec3 v where
     conv :: Double -> v
     mkUnit :: v -> v
@@ -58,3 +60,8 @@ data HitData = HitData
     , hitPoint :: V3
     , normal :: V3
     } deriving Show
+
+randomUS :: IO V3
+randomUS = do
+    v <- let action = randomRIO (-1, 1) in V3 <$> action <*> action <*> action
+    if squaredMag v < 1 then return v else randomUS
