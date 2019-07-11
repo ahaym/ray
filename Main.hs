@@ -16,8 +16,8 @@ import V3
 main :: IO ()
 main = withFile "lightball.ppm" WriteMode $ \h -> do
     hPutStrLn h "P3"
-    let nx = 1200
-        ny = 600
+    let nx = 1000
+        ny = 500
         ns = 100
         lookFrom = V3 12 2 3
         lookAt = V3 0 0 (-1)
@@ -61,7 +61,7 @@ randomScene = do
             , sphere (V3 0 (-1000) (0)) 1000 (Matte $ color3 0.6 0.6 0.6)
             , sphere (V3 (-4) 1 0) 1 (Matte $ color3 0.8 0.3 0.3)           
             , sphere (V3 4 1 0) 1 (Metal 0.2 $ color3 0.8 0.6 0.2)
-            , sphere (V3 14 9 7) 5.25 Light
+            , sphere (V3 14 9 7) 6.5 Light
             ]
     objects'm <- forM [(a, b) | a <- [-11..11], b <- [-11..11]] $ \(a, b) -> do
         chooseMat <- randomRIO (0, 2) :: IO Int
