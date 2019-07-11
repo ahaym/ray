@@ -3,6 +3,7 @@
 module Main where
 
 import Control.Monad
+import Data.Maybe
 import System.IO
 import System.Random
 
@@ -13,29 +14,23 @@ import Sphere
 import V3
 
 main :: IO ()
-main = withFile "chapter11.ppm" WriteMode $ \h -> do
+main = withFile "chapter12.ppm" WriteMode $ \h -> do
     hPutStrLn h "P3"
-    let nx = 200
-        ny = 100
+    let nx = 1000
+        ny = 500
         ns = 100
-        lookFrom = V3 3 3 2
+        lookFrom = V3 12 2 3
         lookAt = V3 0 0 (-1)
         vup = (V3 0 1 0)
         vfov = 20
         aspect = 2
-        aperture = 2
-        focusDist = mag $ lookFrom - lookAt
+        aperture = 0.1
+        focusDist = 10
         cam = mkCamera lookFrom lookAt vup vfov aspect aperture focusDist
-        world = HList
-            [ sphere (V3 0 0 (-1)) 0.5 (Matte $ color3 0.8 0.3 0.3)
-            , sphere (V3 0 (-100.5) (-1)) 100 (Matte $ color3 0.8 0.8 0)
-            , sphere (V3 1 0 (-1)) 0.5 (Metal 0.2 $ color3 0.8 0.6 0.2)
-            , sphere (V3 (-1) 0 (-1)) 0.5 (Glass 1.5)
-            , sphere (V3 (-1) 0 (-1)) (-0.45) (Glass 1.5)
-            ]
     hPrint h (floor nx)
     hPrint h (floor ny)
     hPrint h 255
+    world <- randomScene
     forM_ [(x, y) | y <- [ny-1, ny-2..0], x <- [0..nx-1]] $ \(x, y) -> do
         rands <- replicateM ns $ let action = randomRIO (0, 0.9999999) in (,) <$> action <*> action
         cols <- forM rands $ \(rand1, rand2) -> do
@@ -57,3 +52,35 @@ color h r depth = case hitscan (0.001, 999999999) h r of
     where
         unitDir = mkUnit $ slope r
         t = 0.5*(y unitDir + 1)
+
+randomScene :: IO Hitable
+randomScene = do
+    let n = 500
+        initialWorld =
+            [ sphere (V3 0 1 0) 1 (Glass 1.5)
+            , sphere (V3 0 (-1000) (0)) 1000 (Matte $ color3 0.6 0.6 0.6)
+            , sphere (V3 (-4) 1 0) 1 (Matte $ color3 0.8 0.3 0.3)           
+            , sphere (V3 4 1 0) 1 (Metal 0.2 $ color3 0.8 0.6 0.2)
+            ]
+    objects'm <- forM [(a, b) | a <- [-11..11], b <- [-11..11]] $ \(a, b) -> do
+        chooseMat <- randomRIO (0, 2) :: IO Int
+        centerX <- randomRIO (0, 0.9)
+        centerZ <- randomRIO (0, 0.9)
+        let center = V3 (a + centerX) 0.2 (b + centerZ)
+        if (mag $ center - (V3 4 0.2 0)) > 0.9
+            then case chooseMat of
+                0 -> Just <$> randomMatte center
+                1 -> Just <$> randomMetal center
+                2 -> return $ Just (sphere center 0.2 (Glass 1.5))
+            else return Nothing
+    return . HList $ initialWorld ++ catMaybes objects'm
+    where
+        randomMatte center = do
+            let r2 = (*) <$> randomRIO (0, 1) <*> randomRIO (0, 1)
+            albedo <- color3 <$> r2 <*> r2 <*> r2
+            return $ sphere center 0.2 (Matte albedo)
+        randomMetal center = do
+            let action = randomRIO (0, 1)
+            fuzz <- action
+            albedo <- color3 <$> action <*> action <*> action
+            return $ sphere center 0.2 (Metal fuzz albedo)
