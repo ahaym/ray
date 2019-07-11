@@ -14,10 +14,10 @@ import Sphere
 import V3
 
 main :: IO ()
-main = withFile "chapter12.ppm" WriteMode $ \h -> do
+main = withFile "lightball.ppm" WriteMode $ \h -> do
     hPutStrLn h "P3"
-    let nx = 1000
-        ny = 500
+    let nx = 1200
+        ny = 600
         ns = 100
         lookFrom = V3 12 2 3
         lookAt = V3 0 0 (-1)
@@ -43,24 +43,25 @@ main = withFile "chapter12.ppm" WriteMode $ \h -> do
 
 color :: Hitable -> Ray -> Int -> IO Color3
 color h r depth = case hitscan (0.001, 999999999) h r of
+    Just (_,Light) -> return $ color3 1 1 1
     Just (hd,recMat)
         | depth < 50 -> scatter recMat r hd >>= \case
             Just (r', attenuation) -> (attenuation*) <$> color h r' (depth + 1) 
             _ -> return $ color3 0 0 0
         | otherwise -> return $ color3 0 0 0
-    Nothing -> return $ (conv $ 1 - t)*(color3 1 1 1) + (conv t)*(color3 0.5 0.7 1)
+    Nothing -> return $ color3 0.1 0.1 0.1 --(conv $ 1 - t)*(color3 1 1 1) + (conv t)*(color3 0.5 0.7 1)
     where
         unitDir = mkUnit $ slope r
         t = 0.5*(y unitDir + 1)
 
 randomScene :: IO Hitable
 randomScene = do
-    let n = 500
-        initialWorld =
+    let initialWorld =
             [ sphere (V3 0 1 0) 1 (Glass 1.5)
             , sphere (V3 0 (-1000) (0)) 1000 (Matte $ color3 0.6 0.6 0.6)
             , sphere (V3 (-4) 1 0) 1 (Matte $ color3 0.8 0.3 0.3)           
             , sphere (V3 4 1 0) 1 (Metal 0.2 $ color3 0.8 0.6 0.2)
+            , sphere (V3 14 9 7) 5.25 Light
             ]
     objects'm <- forM [(a, b) | a <- [-11..11], b <- [-11..11]] $ \(a, b) -> do
         chooseMat <- randomRIO (0, 2) :: IO Int

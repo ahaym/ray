@@ -9,6 +9,7 @@ data Material
     = Matte Color3
     | Metal Double Color3
     | Glass Double
+    | Light
     deriving Show
 
 scatter :: Material -> Ray -> HitData -> IO (Maybe (Ray, Color3))
@@ -39,6 +40,8 @@ scatter (Glass refIdx) (Ray inter slope) (HitData _ recP recNorm) = randomRIO (0
             then (Ray recP reflected, attenuation)
             else (Ray recP refracted, attenuation)
         Nothing -> (Ray recP reflected, attenuation)
+
+scatter Light _ _ = return Nothing
 
 reflect :: V3 -> V3 -> V3
 reflect v n = v - 2*(conv $ dot v n)*n
