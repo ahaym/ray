@@ -1,6 +1,7 @@
 module Camera where
 
 import Ray
+import RTM
 import V3
 
 data Camera = Camera
@@ -30,7 +31,7 @@ mkCamera lookFrom lookAt vup vfov aspect aperture focusDist_ =
         horizontal = 2*(conv halfWidth)*focusDist*u
         vertical = 2*(conv halfHeight)*focusDist*v
 
-getRay :: Camera -> Double -> Double -> IO Ray
+getRay :: Camera -> Double -> Double -> RTM Ray
 getRay (Camera ll horiz vert z u v lensRadius) s t = randomUS >>= \rv ->
     let V3 rdx rdy _ = (conv lensRadius)*rv
         offset = u*(conv rdx) + v*(conv rdy)

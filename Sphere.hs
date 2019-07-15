@@ -5,14 +5,14 @@ import Ray
 import V3
 
 data Sphere = Sphere 
-    { center :: V3
-    , radius :: Double
-    , sphereMat :: Material
+    { center :: !V3
+    , radius :: !Double
+    , sphereMat :: !Material
     } deriving Show
 
 data Hitable
-    = HSphere Sphere
-    | HList [Hitable]
+    = HSphere !Sphere
+    | HList ![Hitable]
     deriving Show
 
 sphere :: V3 -> Double -> Material -> Hitable

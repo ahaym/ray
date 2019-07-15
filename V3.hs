@@ -2,7 +2,7 @@
 
 module V3 where
 
-import System.Random
+import RTM
 
 class Vec3 v where
     conv :: Double -> v
@@ -14,9 +14,9 @@ class Vec3 v where
     mag = sqrt . squaredMag
 
 data V3 = V3
-    { x :: Double
-    , y :: Double 
-    , z :: Double
+    { x :: !Double
+    , y :: !Double 
+    , z :: !Double
     } deriving (Eq, Show)
 
 instance Num V3 where
@@ -61,7 +61,7 @@ data HitData = HitData
     , normal :: V3
     } deriving Show
 
-randomUS :: IO V3
+randomUS :: RTM V3
 randomUS = do
-    v <- let action = randomRIO (-1, 1) in V3 <$> action <*> action <*> action
+    v <- let action = rtmR (-1, 1) in V3 <$> action <*> action <*> action
     if squaredMag v < 1 then return v else randomUS

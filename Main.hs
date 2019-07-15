@@ -2,7 +2,10 @@
 
 module Main where
 
+import Control.Concurrent
+import Control.Concurrent.Async
 import Control.Monad
+import Control.Monad.IO.Class
 import Data.Maybe
 import System.IO
 import System.Random
@@ -10,15 +13,19 @@ import System.Random
 import Camera
 import Material
 import Ray
+import RTM
 import Sphere
 import V3
 
 main :: IO ()
-main = withFile "lightball.ppm" WriteMode $ \h -> do
+main = withFile "bleh.ppm" WriteMode $ \h -> do
+    cores <- getNumCapabilities
     hPutStrLn h "P3"
     let nx = 1000
         ny = 500
         ns = 100
+        perCore = fromIntegral $ floor ny `div` cores
+        nys = let ys = init [ny,ny-perCore..0] ++ pure 0  in zip ys (tail ys)
         lookFrom = V3 12 2 3
         lookAt = V3 0 0 (-1)
         vup = (V3 0 1 0)
@@ -27,21 +34,24 @@ main = withFile "lightball.ppm" WriteMode $ \h -> do
         aperture = 0.1
         focusDist = 10
         cam = mkCamera lookFrom lookAt vup vfov aspect aperture focusDist
+    print nys
     hPrint h (floor nx)
     hPrint h (floor ny)
     hPrint h 255
     world <- randomScene
-    forM_ [(x, y) | y <- [ny-1, ny-2..0], x <- [0..nx-1]] $ \(x, y) -> do
-        rands <- replicateM ns $ let action = randomRIO (0, 0.9999999) in (,) <$> action <*> action
+    stuff <- forConcurrently nys $ \(hi,lo) -> runRTM hi $ forM [(x, y) | y <- [hi-1,hi-2..lo], x <- [0..nx-1]] $ \(x, y) -> do
+        rands <- replicateM ns $ let action = rtmR (0, 0.9999999) in (,) <$> action <*> action
         cols <- forM rands $ \(rand1, rand2) -> do
             let u = (x + rand1) / nx
                 v = (y + rand2) / ny
             r <- getRay cam u v
             color world r 0
         let col = sum cols / (conv $ fromIntegral ns)
-        hPutStrLn h $ mkRow col
+        when (x == nx-1) $ (liftIO $ print y)
+        return $ mkRow col
+    mapM_ (mapM_ (hPutStrLn h)) stuff
 
-color :: Hitable -> Ray -> Int -> IO Color3
+color :: Hitable -> Ray -> Int -> RTM Color3
 color h r depth = case hitscan (0.001, 999999999) h r of
     Just (_,Light) -> return $ color3 1 1 1
     Just (hd,recMat)
@@ -61,7 +71,7 @@ randomScene = do
             , sphere (V3 0 (-1000) (0)) 1000 (Matte $ color3 0.6 0.6 0.6)
             , sphere (V3 (-4) 1 0) 1 (Matte $ color3 0.8 0.3 0.3)           
             , sphere (V3 4 1 0) 1 (Metal 0.2 $ color3 0.8 0.6 0.2)
-            , sphere (V3 14 9 7) 6.5 Light
+            , sphere (V3 (-14) 30 7) 14 Light
             ]
     objects'm <- forM [(a, b) | a <- [-11..11], b <- [-11..11]] $ \(a, b) -> do
         chooseMat <- randomRIO (0, 2) :: IO Int

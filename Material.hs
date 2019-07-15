@@ -3,16 +3,17 @@ module Material where
 import System.Random
 
 import Ray
+import RTM
 import V3
 
 data Material
-    = Matte Color3
-    | Metal Double Color3
-    | Glass Double
+    = Matte !Color3
+    | Metal !Double !Color3
+    | Glass !Double
     | Light
     deriving Show
 
-scatter :: Material -> Ray -> HitData -> IO (Maybe (Ray, Color3))
+scatter :: Material -> Ray -> HitData -> RTM (Maybe (Ray, Color3))
 
 scatter (Matte albedo) (Ray inter slope) (HitData _ recP recNorm) = do
     rv <- randomUS
@@ -28,7 +29,7 @@ scatter (Metal fuzz albedo) (Ray inter slope) (HitData _ recP recNorm) = do
         then Just (scattered, albedo)
         else Nothing
 
-scatter (Glass refIdx) (Ray inter slope) (HitData _ recP recNorm) = randomRIO (0, 0.999) >>= \rv ->
+scatter (Glass refIdx) (Ray inter slope) (HitData _ recP recNorm) = rtmR (0, 0.999) >>= \rv ->
     let attenuation = color3 1 1 1
         proj = dot slope recNorm
         (outwardNormal, ratio, cosine) = if proj > 0
